@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fly Finance — Loans Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --surface3: #1f2d45;
+    --border: #1e2d45;
+    --border2: #2a3d5c;
+    --accent: #00c9a7;
+    --accent2: #0085ff;
+    --accent3: #f59e0b;
+    --accent4: #ef4444;
+    --accent5: #a855f7;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --grad1: linear-gradient(135deg, #00c9a7 0%, #0085ff 100%);
+    --grad2: linear-gradient(135deg, #a855f7 0%, #0085ff 100%);
+    --grad3: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(90deg, #0a0e1a 0%, #0f1e35 50%, #0a0e1a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--grad1); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #000;
+  }
+  .logo-text { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .last-updated { font-size: 11px; color: var(--text3); }
+  .live-badge {
+    background: rgba(0,201,167,0.15); border: 1px solid rgba(0,201,167,0.3);
+    color: var(--accent); font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; display: flex; align-items: center; gap: 5px;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border2); color: var(--text2);
+    padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px;
+    font-family: var(--font-body); transition: all .2s;
+  }
+  .refresh-btn:hover { background: var(--surface3); color: var(--text); }
+
+  /* ── Tabs ── */
+  .tabs-wrapper { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; display: flex; gap: 2px; }
+  .tab {
+    padding: 14px 18px; font-size: 13px; font-weight: 500; color: var(--text3);
+    cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { font-size: 15px; }
+
+  /* ── Timeline Buttons ── */
+  .timeline-bar {
+    display: flex; align-items: center; gap: 8px; padding: 14px 28px;
+    background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .tl-label { font-size: 12px; color: var(--text3); font-weight: 500; margin-right: 4px; }
+  .tl-btn {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border2); background: transparent; color: var(--text2);
+    cursor: pointer; transition: all .2s; font-family: var(--font-body);
+  }
+  .tl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tl-btn.active { background: rgba(0,201,167,0.15); border-color: var(--accent); color: var(--accent); }
+  .tl-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .custom-range { display: flex; gap: 6px; align-items: center; }
+  .date-input {
+    background: var(--surface2); border: 1px solid var(--border2); color: var(--text2);
+    padding: 5px 10px; border-radius: var(--radius-sm); font-size: 12px;
+    font-family: var(--font-body); cursor: pointer;
+  }
+  .date-input:focus { outline: 1px solid var(--accent); }
+  .apply-btn {
+    background: var(--grad1); color: #000; font-weight: 600; font-size: 12px;
+    padding: 5px 14px; border-radius: 20px; border: none; cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  /* ── Main Content ── */
+  .main { padding: 20px 28px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Scorecards ── */
+  .scorecards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .scorecard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 18px 16px; position: relative; overflow: hidden; transition: transform .2s, border-color .2s;
+  }
+  .scorecard:hover { transform: translateY(-2px); border-color: var(--border2); }
+  .scorecard::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .scorecard.c1::before { background: var(--grad1); }
+  .scorecard.c2::before { background: var(--grad2); }
+  .scorecard.c3::before { background: var(--grad3); }
+  .scorecard.c4::before { background: linear-gradient(135deg, #00c9a7, #a855f7); }
+  .scorecard.c5::before { background: linear-gradient(135deg, #f59e0b, #00c9a7); }
+  .scorecard.c6::before { background: linear-gradient(135deg, #ef4444, #a855f7); }
+  .sc-label { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 10px; }
+  .sc-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+  .sc-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .sc-icon { position: absolute; right: 16px; top: 14px; font-size: 20px; opacity: .5; }
+
+  /* ── Funnel ── */
+  .funnel-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; margin-bottom: 20px; }
+  .section-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title span { font-size: 13px; font-weight: 400; color: var(--text3); }
+  .funnel-stages { display: flex; align-items: center; gap: 0; }
+  .funnel-stage {
+    flex: 1; text-align: center; position: relative;
+  }
+  .funnel-box {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 14px 8px; margin: 0 4px;
+    transition: transform .2s;
+  }
+  .funnel-box:hover { transform: translateY(-3px); }
+  .funnel-stage-label { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+  .funnel-stage-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); }
+  .funnel-stage-pct { font-size: 11px; color: var(--accent); margin-top: 4px; font-weight: 600; }
+  .funnel-arrow {
+    color: var(--text3); font-size: 18px; flex-shrink: 0; padding: 0 2px;
+    display: flex; align-items: center; padding-bottom: 10px;
+  }
+
+  /* ── Grid Layouts ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .grid-2,.grid-3,.grid-1-2,.grid-2-1 { grid-template-columns: 1fr; } }
+
+  /* ── Chart Card ── */
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; overflow: hidden;
+  }
+  .chart-card canvas { max-height: 280px; }
+
+  /* ── Table ── */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px;
+    padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 9px 12px; font-size: 13px; color: var(--text2); white-space: nowrap; }
+  tbody td:first-child { color: var(--text); font-weight: 500; }
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700;
+    background: var(--surface3); color: var(--text3);
+  }
+  .rank-badge.gold { background: rgba(245,158,11,.2); color: var(--accent3); }
+  .rank-badge.silver { background: rgba(148,163,184,.15); color: #94a3b8; }
+  .rank-badge.bronze { background: rgba(180,120,60,.15); color: #b4783c; }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .pill-green { background: rgba(0,201,167,.15); color: var(--accent); }
+  .pill-blue { background: rgba(0,133,255,.15); color: var(--accent2); }
+  .pill-yellow { background: rgba(245,158,11,.15); color: var(--accent3); }
+  .pill-red { background: rgba(239,68,68,.15); color: var(--accent4); }
+  .pill-purple { background: rgba(168,85,247,.15); color: var(--accent5); }
+
+  /* ── Progress Bar ── */
+  .progress-bar-wrap { margin-top: 4px; background: var(--surface2); border-radius: 4px; height: 4px; }
+  .progress-bar { height: 4px; border-radius: 4px; background: var(--grad1); }
+
+  /* ── Loading Spinner ── */
+  .loading-overlay {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px; gap: 14px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text3); font-size: 13px; }
+
+  /* ── Error ── */
+  .error-box {
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25);
+    border-radius: var(--radius); padding: 16px 20px; color: #fca5a5; font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Geo Map ── */
+  .map-placeholder {
+    background: var(--surface2); border-radius: var(--radius-sm);
+    min-height: 220px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px; color: var(--text3);
+    font-size: 13px; position: relative; overflow: hidden;
+  }
+  .map-countries { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; }
+  .country-chip {
+    display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+    background: var(--surface3); border: 1px solid var(--border2); border-radius: 20px;
+    font-size: 12px; font-weight: 500; color: var(--text2);
+  }
+  .country-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .country-chip .cnt { font-size: 10px; color: var(--text3); }
+
+  /* ── KAM Card ── */
+  .kam-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .kam-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;
+    transition: border-color .2s;
+  }
+  .kam-card:hover { border-color: var(--border2); }
+  .kam-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .kam-avatar {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #000; flex-shrink: 0;
+  }
+  .kam-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .kam-email { font-size: 10px; color: var(--text3); }
+  .kam-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kam-metric { background: var(--surface2); border-radius: var(--radius-sm); padding: 9px 10px; }
+  .kam-metric-label { font-size: 10px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; }
+  .kam-metric-val { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  /* ── Intake ── */
+  .intake-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .intake-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 12px; text-align: center; transition: border-color .2s;
+  }
+  .intake-card:hover { border-color: var(--accent); }
+  .intake-label { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+  .intake-val { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text); }
+  .intake-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  /* ── Data status bar ── */
+  .data-status {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: rgba(0,201,167,.06); border: 1px solid rgba(0,201,167,.15); border-radius: var(--radius-sm);
+    margin-bottom: 16px; font-size: 12px; color: var(--text3);
+  }
+  .data-status strong { color: var(--accent); }
+
+  /* ── Mini section header ── */
+  .mini-header { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  /* ── Top 10 bar list ── */
+  .bar-list { display: flex; flex-direction: column; gap: 8px; }
+  .bar-item { display: flex; align-items: center; gap: 10px; }
+  .bar-item-label { font-size: 12px; color: var(--text2); width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .bar-item-track { flex: 1; background: var(--surface2); border-radius: 4px; height: 6px; }
+  .bar-item-fill { height: 6px; border-radius: 4px; }
+  .bar-item-val { font-size: 12px; font-weight: 600; color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
+
+  /* ── No data ── */
+  .no-data { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+  /* ── Conversion badges ── */
+  .conv-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .conv-box {
+    flex: 1; min-width: 120px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+  }
+  .conv-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .conv-val { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+  .conv-arrow { font-size: 10px; color: var(--text3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">FF</div>
+    <div>
+      <div class="logo-text">Fly Finance</div>
+      <div class="logo-sub">Loans Intelligence Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">Fetching data…</div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- ── Tabs ── -->
+<div class="tabs-wrapper">
+  <div class="tab active" onclick="switchTab('overview')" id="tab-overview"><span class="tab-icon">📊</span>Overview</div>
+  <div class="tab" onclick="switchTab('kam')" id="tab-kam"><span class="tab-icon">👤</span>KAM Level</div>
+  <div class="tab" onclick="switchTab('partner')" id="tab-partner"><span class="tab-icon">🤝</span>Partner Level</div>
+  <div class="tab" onclick="switchTab('bdm')" id="tab-bdm"><span class="tab-icon">🏢</span>BDM Level</div>
+  <div class="tab" onclick="switchTab('geography')" id="tab-geography"><span class="tab-icon">🌍</span>Geography</div>
+  <div class="tab" onclick="switchTab('intake')" id="tab-intake"><span class="tab-icon">📅</span>Intake Analysis</div>
+</div>
+
+<!-- ── Timeline Bar ── -->
+<div class="timeline-bar">
+  <span class="tl-label">Timeline:</span>
+  <button class="tl-btn" onclick="setTimeline('7d',this)">Last 7D</button>
+  <button class="tl-btn" onclick="setTimeline('30d',this)">Last 30D</button>
+  <button class="tl-btn active" onclick="setTimeline('90d',this)">Last 90D</button>
+  <button class="tl-btn" onclick="setTimeline('6m',this)">6 Months</button>
+  <button class="tl-btn" onclick="setTimeline('1y',this)">1 Year</button>
+  <button class="tl-btn" onclick="setTimeline('fy',this)">FY 2024-25</button>
+  <button class="tl-btn" onclick="setTimeline('all',this)">All Time</button>
+  <div class="tl-sep"></div>
+  <div class="custom-range">
+    <input type="date" class="date-input" id="fromDate"/>
+    <span style="color:var(--text3);font-size:12px">to</span>
+    <input type="date" class="date-input" id="toDate"/>
+    <button class="apply-btn" onclick="applyCustom()">Apply</button>
+  </div>
+</div>
+
+<!-- ── Main Content ── -->
+<div class="main">
+
+<!-- ══════════════════════════════════════ OVERVIEW ══════════════════════════════════════ -->
+<div class="tab-content active" id="content-overview">
+  <div id="overview-loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading dashboard data…</div>
+  </div>
+  <div id="overview-main" style="display:none">
+    <div id="data-status-bar" class="data-status">
+      <strong id="status-count">0</strong> records loaded · Filtered: <strong id="status-filtered">0</strong> · Last refreshed: <span id="status-time">—</span>
+    </div>
+    <!-- Scorecards -->
+    <div class="scorecards" id="scorecards"></div>
+    <!-- Funnel -->
+    <div class="funnel-wrap">
+      <div class="section-title">🔁 Loan Journey Funnel <span>Lead → App → Login → Sanction → PF → Disbursal</span></div>
+      <div class="funnel-stages" id="funnel-stages"></div>
+    </div>
+    <!-- Conversion rates -->
+    <div class="conv-row" id="conv-row"></div>
+    <!-- Charts Row 1 -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="section-title">📈 Monthly Leads vs Apps</div>
+        <canvas id="chartMonthlyTrend"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">🎯 Status Distribution</div>
+        <canvas id="chartStatusPie"></canvas>
+      </div>
+    </div>
+    <!-- Charts Row 2 -->
+    <div class="grid-3">
+      <div class="chart-card">
+        <div class="section-title">🏦 Channel Mix</div>
+        <canvas id="chartChannelPie"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">🎓 Program Type</div>
+        <canvas id="chartProgramPie"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">📊 Open vs Closed</div>
+        <canvas id="chartOpenClose"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ KAM LEVEL ══════════════════════════════════════ -->
+<div class="tab-content" id="content-kam">
+  <div class="kam-cards" id="kam-cards"></div>
+  <div class="grid-2-1">
+    <div class="chart-card">
+      <div class="section-title">📊 Leads by KAM</div>
+      <canvas id="chartKamLeads"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🥇 KAM Conversion Rank</div>
+      <div class="bar-list" id="kamConvRank"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">📅 Monthly Apps by KAM</div>
+      <canvas id="chartKamMonthly"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🎯 Sanctions by KAM</div>
+      <canvas id="chartKamSanction"></canvas>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="section-title">📋 KAM Performance Table</div>
+    <table id="kamTable">
+      <thead><tr>
+        <th>#</th><th>KAM</th><th>Leads</th><th>Apps</th><th>Logins</th><th>Sanctions</th><th>PF</th><th>Disbursed</th>
+        <th>App Conv%</th><th>Login Conv%</th><th>Sanction Conv%</th>
+      </tr></thead>
+      <tbody id="kamTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ PARTNER LEVEL ══════════════════════════════════════ -->
+<div class="tab-content" id="content-partner">
+  <div class="grid-1-2">
+    <div class="chart-card">
+      <div class="section-title">🏷️ Partner Type Mix</div>
+      <canvas id="chartPartnerType"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🏆 Top 15 Partners by Leads</div>
+      <canvas id="chartTopPartners"></canvas>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">📈 Top Partners — Login Trend</div>
+      <canvas id="chartPartnerLogin"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🌐 Partner by Region</div>
+      <canvas id="chartPartnerRegion"></canvas>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="section-title">📋 Partner Performance Table</div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Partner Name</th><th>Type</th><th>Region</th><th>Leads</th><th>Apps</th><th>Logins</th><th>Sanctions</th><th>Disbursed</th><th>Conv%</th>
+      </tr></thead>
+      <tbody id="partnerTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ BDM LEVEL ══════════════════════════════════════ -->
+<div class="tab-content" id="content-bdm">
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">🏢 Leads by BDM</div>
+      <canvas id="chartBdmLeads"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">📊 BDM Funnel Performance</div>
+      <canvas id="chartBdmFunnel"></canvas>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="section-title">📋 BDM Performance Table</div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>BDM</th><th>Partners</th><th>Leads</th><th>Apps</th><th>Logins</th><th>Sanctions</th><th>Disbursed</th><th>Conv%</th>
+      </tr></thead>
+      <tbody id="bdmTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ GEOGRAPHY ══════════════════════════════════════ -->
+<div class="tab-content" id="content-geography">
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">🌍 Student Source Countries</div>
+      <canvas id="chartSourceCountry"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🎯 Target Study Countries</div>
+      <canvas id="chartTargetCountry"></canvas>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">🗺️ Source by Region</div>
+      <canvas id="chartRegion"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">📊 Source Country Distribution</div>
+      <div class="map-countries" id="sourceCountryChips"></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="table-card" style="margin-bottom:0">
+      <div class="mini-header">Top Source Countries</div>
+      <table><thead><tr><th>#</th><th>Country</th><th>Leads</th><th>Apps</th><th>%</th></tr></thead>
+      <tbody id="sourceTable"></tbody></table>
+    </div>
+    <div class="table-card" style="margin-bottom:0">
+      <div class="mini-header">Top Target Countries</div>
+      <table><thead><tr><th>#</th><th>Country</th><th>Leads</th><th>Sanctions</th><th>%</th></tr></thead>
+      <tbody id="targetTable"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ INTAKE ══════════════════════════════════════ -->
+<div class="tab-content" id="content-intake">
+  <div class="intake-grid" id="intakeGrid"></div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="section-title">📅 Leads by Intake Period</div>
+      <canvas id="chartIntakeLeads"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🔁 Intake Funnel Comparison</div>
+      <canvas id="chartIntakeFunnel"></canvas>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="section-title">📋 Intake-wise Performance</div>
+    <table><thead><tr>
+      <th>Intake</th><th>Leads</th><th>Apps</th><th>Logins</th><th>Sanctions</th><th>Disbursed</th><th>Conv%</th>
+    </tr></thead>
+    <tbody id="intakeTableBody"></tbody></table>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────────────────────
+const SHEET_ID = '1-oTa7MxvKMV0iSI-SqTJZtJxll1Z-pkPADwu_GWBALI';
+const SHEET_NAME = 'Sheet1';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let ALL_DATA = [];
+let FILTERED = [];
+let TIMELINE = '90d';
+let CUSTOM_FROM = null;
+let CUSTOM_TO = null;
+let activeTab = 'overview';
+const charts = {};
+
+// Palette
+const PAL = ['#00c9a7','#0085ff','#f59e0b','#a855f7','#ef4444','#14b8a6','#6366f1','#ec4899','#84cc16','#f97316','#06b6d4','#8b5cf6','#22c55e','#fb923c','#64748b'];
+const avatarGrads = [['#00c9a7','#0085ff'],['#a855f7','#0085ff'],['#f59e0b','#ef4444'],['#00c9a7','#a855f7'],['#0085ff','#f59e0b'],['#ef4444','#a855f7'],['#14b8a6','#6366f1'],['#ec4899','#f97316'],['#84cc16','#14b8a6'],['#06b6d4','#8b5cf6']];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLUMN MAP (will be set after first load)
+// ─────────────────────────────────────────────────────────────────────────────
+let COL = {};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOAD DATA
+// ─────────────────────────────────────────────────────────────────────────────
+function loadData() {
+  document.getElementById('overview-loading').style.display = 'flex';
+  document.getElementById('overview-main').style.display = 'none';
+  document.getElementById('lastUpdated').textContent = 'Loading…';
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+  const script = document.createElement('script');
+  const cbName = 'gvizCallback_' + Date.now();
+  window[cbName] = function(resp) {
+    document.head.removeChild(script);
+    delete window[cbName];
+    try {
+      parseGviz(resp);
+    } catch(e) {
+      showError('Parse error: ' + e.message);
+    }
+  };
+  script.src = url + `&tqx=out:json;handler:${cbName}`;
+  script.onerror = () => showError('Could not load Google Sheet. Make sure it is shared publicly (Anyone with link can view).');
+  document.head.appendChild(script);
+}
+
+function parseGviz(resp) {
+  const table = resp.table;
+  const cols = table.cols;
+  
+  // Build column index map
+  COL = {};
+  cols.forEach((c, i) => { COL[c.label.trim()] = i; });
+
+  ALL_DATA = table.rows.map(row => {
+    const r = {};
+    cols.forEach((c, i) => {
+      r[c.label.trim()] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : null) : null;
+    });
+    return r;
+  });
+
+  document.getElementById('status-count').textContent = ALL_DATA.length.toLocaleString();
+  document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  document.getElementById('status-time').textContent = new Date().toLocaleTimeString();
+
+  applyFilter();
+}
+
+function showError(msg) {
+  document.getElementById('overview-loading').style.display = 'none';
+  document.getElementById('overview-main').style.display = 'block';
+  document.querySelector('#content-overview').insertAdjacentHTML('afterbegin', `<div class="error-box">⚠️ ${msg}<br><br>
+    <small>Make sure your Google Sheet is set to <b>Anyone with the link → Viewer</b>.<br>
+    Your Sheet ID: ${SHEET_ID}</small></div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIMELINE FILTER
+// ─────────────────────────────────────────────────────────────────────────────
+function applyFilter() {
+  const now = new Date();
+  let fromDate = null, toDate = new Date();
+
+  if (CUSTOM_FROM && CUSTOM_TO && TIMELINE === 'custom') {
+    fromDate = new Date(CUSTOM_FROM);
+    toDate = new Date(CUSTOM_TO);
+  } else {
+    const tlMap = { '7d':7,'30d':30,'90d':90,'6m':180,'1y':365 };
+    if (TIMELINE === 'all') fromDate = new Date('2021-01-01');
+    else if (TIMELINE === 'fy') { fromDate = new Date('2024-04-01'); toDate = new Date('2025-03-31'); }
+    else { const days = tlMap[TIMELINE]||90; fromDate = new Date(now - days*86400000); }
+  }
+
+  FILTERED = ALL_DATA.filter(r => {
+    const d = r['Lead Created on'] || r['lead_creation_date'];
+    if (!d) return true;
+    const dt = new Date(d);
+    return dt >= fromDate && dt <= toDate;
+  });
+
+  document.getElementById('status-filtered').textContent = FILTERED.length.toLocaleString();
+  renderAll();
+}
+
+function setTimeline(tl, btn) {
+  TIMELINE = tl;
+  document.querySelectorAll('.tl-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (ALL_DATA.length) applyFilter();
+}
+
+function applyCustom() {
+  CUSTOM_FROM = document.getElementById('fromDate').value;
+  CUSTOM_TO = document.getElementById('toDate').value;
+  if (CUSTOM_FROM && CUSTOM_TO) { TIMELINE = 'custom'; applyFilter(); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('content-'+name).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER ALL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderAll() {
+  document.getElementById('overview-loading').style.display = 'none';
+  document.getElementById('overview-main').style.display = 'block';
+
+  renderOverview();
+  renderKAM();
+  renderPartner();
+  renderBDM();
+  renderGeography();
+  renderIntake();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function get(row, ...keys) {
+  for (const k of keys) { if (row[k] !== undefined && row[k] !== null) return row[k]; }
+  return null;
+}
+
+function groupBy(data, key) {
+  const m = {};
+  data.forEach(r => {
+    const k = get(r, key) || 'Unknown';
+    m[k] = (m[k] || []);
+    m[k].push(r);
+  });
+  return m;
+}
+
+function countUnique(data, key) {
+  const m = {};
+  data.forEach(r => {
+    const k = get(r, key) || 'Unknown';
+    m[k] = (m[k] || 0) + 1;
+  });
+  return m;
+}
+
+function sortObj(obj, desc=true) {
+  return Object.entries(obj).sort((a,b) => desc ? b[1]-a[1] : a[1]-b[1]);
+}
+
+function pct(a, b) { return b > 0 ? ((a/b)*100).toFixed(1)+'%' : '0%'; }
+
+function mkChart(id, type, data, opts={}) {
+  if (charts[id]) { charts[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type, data,
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { size: 11, family: 'Inter' }, padding: 12 } },
+        tooltip: { backgroundColor: '#1a2235', borderColor: '#2a3d5c', borderWidth: 1, titleColor: '#e2e8f0', bodyColor: '#94a3b8', padding: 10 }
+      },
+      scales: type !== 'pie' && type !== 'doughnut' ? {
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e2d45' } },
+        y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e2d45' } }
+      } : undefined,
+      ...opts
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const D = FILTERED;
+
+  // Count funnel
+  const leads = new Set(D.map(r => get(r,'user_id_uuid'))).size;
+  const apps   = D.filter(r => get(r,'App Created on','APP_creation_date')).length;
+  const logins = D.filter(r => get(r,'Login on','application_id_received_at')).length;
+  const sanctions = D.filter(r => get(r,'Sanctioned on','sanction_Date')).length;
+  const pf = D.filter(r => get(r,'PF_Date')).length;
+  const disb = D.filter(r => get(r,'Disb_Date')).length;
+
+  // Scorecards
+  const sc = [
+    { label:'Total Leads', val: leads.toLocaleString(), sub:'Unique students', cls:'c1', icon:'👥' },
+    { label:'Applications', val: apps.toLocaleString(), sub:`${pct(apps,leads)} of leads`, cls:'c2', icon:'📄' },
+    { label:'Logins', val: logins.toLocaleString(), sub:`${pct(logins,apps)} of apps`, cls:'c3', icon:'🔐' },
+    { label:'Sanctions', val: sanctions.toLocaleString(), sub:`${pct(sanctions,logins)} of logins`, cls:'c4', icon:'✅' },
+    { label:'PF Collected', val: pf.toLocaleString(), sub:`${pct(pf,sanctions)} of sanctions`, cls:'c5', icon:'💳' },
+    { label:'Disbursed', val: disb.toLocaleString(), sub:`${pct(disb,pf)} of PF`, cls:'c6', icon:'🚀' },
+  ];
+  document.getElementById('scorecards').innerHTML = sc.map(s => `
+    <div class="scorecard ${s.cls}">
+      <div class="sc-icon">${s.icon}</div>
+      <div class="sc-label">${s.label}</div>
+      <div class="sc-value">${s.val}</div>
+      <div class="sc-sub">${s.sub}</div>
+    </div>`).join('');
+
+  // Funnel
+  const stages = [
+    {label:'LEADS', val:leads, base:leads},
+    {label:'APPS', val:apps, base:leads},
+    {label:'LOGINS', val:logins, base:leads},
+    {label:'SANCTIONS', val:sanctions, base:leads},
+    {label:'PF', val:pf, base:leads},
+    {label:'DISBURSED', val:disb, base:leads},
+  ];
+  document.getElementById('funnel-stages').innerHTML = stages.map((s,i) => `
+    <div class="funnel-stage">
+      <div class="funnel-box">
+        <div class="funnel-stage-label">${s.label}</div>
+        <div class="funnel-stage-val">${s.val.toLocaleString()}</div>
+        <div class="funnel-stage-pct">${pct(s.val,s.base)}</div>
+      </div>
+    </div>
+    ${i<stages.length-1 ? '<div class="funnel-arrow">›</div>' : ''}`).join('');
+
+  // Conversion row
+  const convs = [
+    {label:'Lead → App', val: pct(apps,leads), arrow:'Leads converting to Applications'},
+    {label:'App → Login', val: pct(logins,apps), arrow:'Applications converting to Logins'},
+    {label:'Login → Sanction', val: pct(sanctions,logins), arrow:'Logins converting to Sanctions'},
+    {label:'Sanction → PF', val: pct(pf,sanctions), arrow:'Sanctions collecting PF'},
+    {label:'PF → Disbursal', val: pct(disb,pf), arrow:'PF leading to Disbursals'},
+    {label:'Overall Conv.', val: pct(disb,leads), arrow:'Lead to Disbursal'},
+  ];
+  document.getElementById('conv-row').innerHTML = convs.map((c,i) => `
+    <div class="conv-box">
+      <div class="conv-label">${c.label}</div>
+      <div class="conv-val" style="color:${PAL[i]}">${c.val}</div>
+      <div class="conv-arrow">${c.arrow}</div>
+    </div>`).join('');
+
+  // Monthly trend chart
+  const byMonth = {};
+  D.forEach(r => {
+    const lm = get(r,'Lead Creation Month','lead_month');
+    const am = get(r,'App Month','app_month');
+    if (lm) { byMonth[lm] = byMonth[lm] || {leads:0,apps:0}; byMonth[lm].leads++; }
+    if (am) { byMonth[am] = byMonth[am] || {leads:0,apps:0}; byMonth[am].apps++; }
+  });
+  const months = Object.keys(byMonth).sort();
+  mkChart('chartMonthlyTrend','bar',{
+    labels: months,
+    datasets: [
+      { label:'Leads', data: months.map(m=>byMonth[m]?.leads||0), backgroundColor:'rgba(0,201,167,.7)', borderRadius:4 },
+      { label:'Apps', data: months.map(m=>byMonth[m]?.apps||0), backgroundColor:'rgba(0,133,255,.7)', borderRadius:4 },
+    ]
+  });
+
+  // Status pie
+  const statusMap = countUnique(D,'Applicant_Status');
+  const topStatus = sortObj(statusMap).slice(0,8);
+  mkChart('chartStatusPie','doughnut',{
+    labels: topStatus.map(s=>s[0]),
+    datasets:[{ data: topStatus.map(s=>s[1]), backgroundColor: PAL, borderWidth:0, hoverOffset:6 }]
+  });
+
+  // Channel pie
+  const chanMap = countUnique(D,'Modified_Channel_Name');
+  mkChart('chartChannelPie','doughnut',{
+    labels: Object.keys(chanMap),
+    datasets:[{ data: Object.values(chanMap), backgroundColor: PAL, borderWidth:0 }]
+  });
+
+  // Program pie
+  const progMap = countUnique(D,'program_type');
+  const topProg = sortObj(progMap).slice(0,6);
+  mkChart('chartProgramPie','doughnut',{
+    labels: topProg.map(s=>s[0]),
+    datasets:[{ data: topProg.map(s=>s[1]), backgroundColor: PAL, borderWidth:0 }]
+  });
+
+  // Open/Close donut
+  const ocMap = countUnique(D,'open_close');
+  mkChart('chartOpenClose','doughnut',{
+    labels: Object.keys(ocMap),
+    datasets:[{ data: Object.values(ocMap), backgroundColor:['rgba(0,201,167,.8)','rgba(239,68,68,.8)'], borderWidth:0 }]
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KAM LEVEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderKAM() {
+  const D = FILTERED;
+  const byKam = groupBy(D,'kam');
+  
+  const kamStats = Object.entries(byKam).map(([name,rows]) => {
+    const leads = new Set(rows.map(r=>get(r,'user_id_uuid'))).size;
+    const apps = rows.filter(r=>get(r,'App Created on','APP_creation_date')).length;
+    const logins = rows.filter(r=>get(r,'Login on','application_id_received_at')).length;
+    const sanctions = rows.filter(r=>get(r,'Sanctioned on','sanction_Date')).length;
+    const pfC = rows.filter(r=>get(r,'PF_Date')).length;
+    const disb = rows.filter(r=>get(r,'Disb_Date')).length;
+    const email = get(rows[0],'KAM_Email','kam_email') || '';
+    return {name, email, leads, apps, logins, sanctions, pf:pfC, disb};
+  }).sort((a,b)=>b.leads-a.leads);
+
+  // KAM Cards
+  document.getElementById('kam-cards').innerHTML = kamStats.map((k,i) => {
+    const [g1,g2] = avatarGrads[i % avatarGrads.length];
+    const initials = k.name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    return `<div class="kam-card">
+      <div class="kam-header">
+        <div class="kam-avatar" style="background:linear-gradient(135deg,${g1},${g2})">${initials}</div>
+        <div><div class="kam-name">${k.name||'—'}</div><div class="kam-email">${k.email}</div></div>
+      </div>
+      <div class="kam-metrics">
+        <div class="kam-metric"><div class="kam-metric-label">Leads</div><div class="kam-metric-val" style="color:${PAL[0]}">${k.leads}</div></div>
+        <div class="kam-metric"><div class="kam-metric-label">Apps</div><div class="kam-metric-val" style="color:${PAL[1]}">${k.apps}</div></div>
+        <div class="kam-metric"><div class="kam-metric-label">Sanctions</div><div class="kam-metric-val" style="color:${PAL[2]}">${k.sanctions}</div></div>
+        <div class="kam-metric"><div class="kam-metric-label">Disbursed</div><div class="kam-metric-val" style="color:${PAL[4]}">${k.disb}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Bar chart leads by KAM
+  mkChart('chartKamLeads','bar',{
+    labels: kamStats.map(k=>k.name.split(' ')[0]),
+    datasets:[{ label:'Leads', data:kamStats.map(k=>k.leads), backgroundColor: kamStats.map((_,i)=>PAL[i%PAL.length]), borderRadius:5 }]
+  },{plugins:{legend:{display:false}}});
+
+  // KAM Sanction bar
+  mkChart('chartKamSanction','bar',{
+    labels: kamStats.map(k=>k.name.split(' ')[0]),
+    datasets:[
+      { label:'Apps', data:kamStats.map(k=>k.apps), backgroundColor:'rgba(0,133,255,.6)', borderRadius:3 },
+      { label:'Sanctions', data:kamStats.map(k=>k.sanctions), backgroundColor:'rgba(0,201,167,.7)', borderRadius:3 },
+    ]
+  });
+
+  // Monthly by KAM stacked
+  const months = [...new Set(D.map(r=>get(r,'Lead Creation Month','lead_month')).filter(Boolean))].sort();
+  const top5Kam = kamStats.slice(0,5);
+  mkChart('chartKamMonthly','bar',{
+    labels: months,
+    datasets: top5Kam.map((k,i)=>({
+      label: k.name.split(' ')[0],
+      data: months.map(m => D.filter(r=>get(r,'kam')===k.name && get(r,'Lead Creation Month','lead_month')===m).length),
+      backgroundColor: PAL[i]+'99', borderRadius: 3
+    }))
+  },{scales:{x:{stacked:true},y:{stacked:true}}});
+
+  // Conv rank bar list
+  const ranked = kamStats.map(k=>({name:k.name.split(' ')[0], conv: k.leads>0?k.disb/k.leads:0, disb:k.disb})).sort((a,b)=>b.conv-a.conv);
+  const maxConv = ranked[0]?.conv || 1;
+  document.getElementById('kamConvRank').innerHTML = ranked.slice(0,8).map((k,i)=>`
+    <div class="bar-item">
+      <div class="bar-item-label">${k.name}</div>
+      <div class="bar-item-track"><div class="bar-item-fill" style="width:${(k.conv/maxConv*100).toFixed(0)}%;background:${PAL[i%PAL.length]}"></div></div>
+      <div class="bar-item-val">${(k.conv*100).toFixed(1)}%</div>
+    </div>`).join('');
+
+  // Table
+  document.getElementById('kamTableBody').innerHTML = kamStats.map((k,i)=>`
+    <tr>
+      <td><span class="rank-badge ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span></td>
+      <td>${k.name}</td>
+      <td>${k.leads}</td>
+      <td>${k.apps}</td>
+      <td>${k.logins}</td>
+      <td>${k.sanctions}</td>
+      <td>${k.pf}</td>
+      <td><span class="pill pill-green">${k.disb}</span></td>
+      <td>${pct(k.apps,k.leads)}</td>
+      <td>${pct(k.logins,k.apps)}</td>
+      <td>${pct(k.sanctions,k.logins)}</td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTNER LEVEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderPartner() {
+  const D = FILTERED.filter(r => get(r,'partner_name') && get(r,'partner_name') !== 'NULL');
+  const byPartner = groupBy(D,'partner_name');
+  
+  const stats = Object.entries(byPartner).map(([name,rows])=>({
+    name,
+    type: get(rows[0],'partner_type') || 'Non-LP',
+    region: get(rows[0],'region') || 'Unknown',
+    leads: new Set(rows.map(r=>get(r,'user_id_uuid'))).size,
+    apps: rows.filter(r=>get(r,'App Created on','APP_creation_date')).length,
+    logins: rows.filter(r=>get(r,'Login on','application_id_received_at')).length,
+    sanctions: rows.filter(r=>get(r,'Sanctioned on','sanction_Date')).length,
+    disb: rows.filter(r=>get(r,'Disb_Date')).length,
+  })).sort((a,b)=>b.leads-a.leads);
+
+  const top15 = stats.slice(0,15);
+
+  // Partner type pie
+  const ptMap = countUnique(D,'partner_type');
+  mkChart('chartPartnerType','doughnut',{
+    labels: Object.keys(ptMap).map(k=>k||'Non-LP'),
+    datasets:[{ data:Object.values(ptMap), backgroundColor:PAL, borderWidth:0 }]
+  });
+
+  // Top partners bar
+  mkChart('chartTopPartners','bar',{
+    labels: top15.map(p=>p.name.slice(0,18)),
+    datasets:[{ label:'Leads', data:top15.map(p=>p.leads), backgroundColor:PAL.map(c=>c+'cc'), borderRadius:4 }]
+  },{plugins:{legend:{display:false}},indexAxis:'y'});
+
+  // Partner login trend – top 5 by login across months
+  const months = [...new Set(D.map(r=>get(r,'Login Month','login_month')).filter(Boolean))].sort();
+  const top5P = stats.filter(p=>p.logins>0).slice(0,5);
+  mkChart('chartPartnerLogin','line',{
+    labels: months,
+    datasets: top5P.map((p,i)=>({
+      label:p.name.slice(0,15),
+      data: months.map(m => D.filter(r=>get(r,'partner_name')===p.name && get(r,'Login Month','login_month')===m).length),
+      borderColor: PAL[i], backgroundColor:'transparent', tension:.4, pointRadius:3
+    }))
+  });
+
+  // Region bar
+  const regMap = countUnique(D,'region');
+  const regS = sortObj(regMap);
+  mkChart('chartPartnerRegion','bar',{
+    labels: regS.map(r=>r[0]),
+    datasets:[{ label:'Partners', data:regS.map(r=>r[1]), backgroundColor:regS.map((_,i)=>PAL[i%PAL.length]), borderRadius:4 }]
+  },{plugins:{legend:{display:false}}});
+
+  // Table
+  document.getElementById('partnerTableBody').innerHTML = stats.slice(0,30).map((p,i)=>`
+    <tr>
+      <td><span class="rank-badge ${i<3?['gold','silver','bronze'][i]:''}">${i+1}</span></td>
+      <td>${p.name.slice(0,28)}</td>
+      <td><span class="pill ${p.type==='LP'?'pill-green':'pill-blue'}">${p.type}</span></td>
+      <td><span class="pill pill-purple">${p.region}</span></td>
+      <td>${p.leads}</td>
+      <td>${p.apps}</td>
+      <td>${p.logins}</td>
+      <td>${p.sanctions}</td>
+      <td><span class="pill pill-green">${p.disb}</span></td>
+      <td>${pct(p.disb,p.leads)}</td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BDM LEVEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderBDM() {
+  const D = FILTERED.filter(r => get(r,'BDM','bdm1') && get(r,'BDM','bdm1') !== 'Null');
+  const byBdm = groupBy(D, 'BDM');
+
+  const stats = Object.entries(byBdm).map(([name,rows])=>({
+    name,
+    partners: new Set(rows.map(r=>get(r,'partner_name'))).size,
+    leads: new Set(rows.map(r=>get(r,'user_id_uuid'))).size,
+    apps: rows.filter(r=>get(r,'App Created on','APP_creation_date')).length,
+    logins: rows.filter(r=>get(r,'Login on','application_id_received_at')).length,
+    sanctions: rows.filter(r=>get(r,'Sanctioned on','sanction_Date')).length,
+    disb: rows.filter(r=>get(r,'Disb_Date')).length,
+  })).sort((a,b)=>b.leads-a.leads);
+
+  mkChart('chartBdmLeads','bar',{
+    labels: stats.map(b=>b.name.split(' ')[0]),
+    datasets:[{label:'Leads',data:stats.map(b=>b.leads),backgroundColor:stats.map((_,i)=>PAL[i%PAL.length]),borderRadius:5}]
+  },{plugins:{legend:{display:false}}});
+
+  const top5 = stats.slice(0,6);
+  mkChart('chartBdmFunnel','bar',{
+    labels: top5.map(b=>b.name.split(' ')[0]),
+    datasets:[
+      {label:'Leads',data:top5.map(b=>b.leads),backgroundColor:'rgba(0,201,167,.7)',borderRadius:3},
+      {label:'Apps',data:top5.map(b=>b.apps),backgroundColor:'rgba(0,133,255,.7)',borderRadius:3},
+      {label:'Logins',data:top5.map(b=>b.logins),backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},
+      {label:'Sanctions',data:top5.map(b=>b.sanctions),backgroundColor:'rgba(168,85,247,.7)',borderRadius:3},
+    ]
+  },{scales:{x:{stacked:false},y:{stacked:false}}});
+
+  document.getElementById('bdmTableBody').innerHTML = stats.map((b,i)=>`
+    <tr>
+      <td><span class="rank-badge ${i<3?['gold','silver','bronze'][i]:''}">${i+1}</span></td>
+      <td>${b.name}</td>
+      <td>${b.partners}</td>
+      <td>${b.leads}</td>
+      <td>${b.apps}</td>
+      <td>${b.logins}</td>
+      <td>${b.sanctions}</td>
+      <td><span class="pill pill-green">${b.disb}</span></td>
+      <td>${pct(b.disb,b.leads)}</td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GEOGRAPHY
+// ─────────────────────────────────────────────────────────────────────────────
+function renderGeography() {
+  const D = FILTERED;
+
+  // Source country
+  const sourceMap = countUnique(D, 'Source Country');
+  const srcS = sortObj(sourceMap).filter(s=>s[0]&&s[0]!=='Unknown').slice(0,12);
+  mkChart('chartSourceCountry','bar',{
+    labels: srcS.map(s=>s[0]),
+    datasets:[{label:'Students',data:srcS.map(s=>s[1]),backgroundColor:srcS.map((_,i)=>PAL[i%PAL.length]),borderRadius:4}]
+  },{plugins:{legend:{display:false}},indexAxis:'y'});
+
+  // Target country
+  const targetMap = countUnique(D, 'target_country');
+  const tgtS = sortObj(targetMap).filter(s=>s[0]&&s[0]!=='Unknown').slice(0,12);
+  mkChart('chartTargetCountry','bar',{
+    labels: tgtS.map(s=>s[0]),
+    datasets:[{label:'Students',data:tgtS.map(s=>s[1]),backgroundColor:tgtS.map((_,i)=>PAL[(i+4)%PAL.length]),borderRadius:4}]
+  },{plugins:{legend:{display:false}},indexAxis:'y'});
+
+  // Region donut
+  const regMap = countUnique(D,'region');
+  const regS = sortObj(regMap).filter(r=>r[0]!=='Null');
+  mkChart('chartRegion','doughnut',{
+    labels: regS.map(r=>r[0]),
+    datasets:[{data:regS.map(r=>r[1]),backgroundColor:PAL,borderWidth:0}]
+  });
+
+  // Country chips
+  const total = srcS.reduce((s,c)=>s+c[1],0);
+  document.getElementById('sourceCountryChips').innerHTML = srcS.map((s,i)=>`
+    <div class="country-chip">
+      <div class="dot" style="background:${PAL[i%PAL.length]}"></div>
+      <span>${s[0]}</span>
+      <span class="cnt">${s[1]}</span>
+    </div>`).join('');
+
+  // Source table
+  document.getElementById('sourceTable').innerHTML = srcS.map((s,i)=>`
+    <tr><td><span class="rank-badge ${i<3?['gold','silver','bronze'][i]:''}">${i+1}</span></td>
+    <td>${s[0]}</td>
+    <td>${s[1]}</td>
+    <td>${D.filter(r=>get(r,'Source Country')===s[0]&&get(r,'App Created on','APP_creation_date')).length}</td>
+    <td>${pct(s[1],D.length)}</td></tr>`).join('');
+
+  // Target table
+  document.getElementById('targetTable').innerHTML = tgtS.map((s,i)=>`
+    <tr><td><span class="rank-badge ${i<3?['gold','silver','bronze'][i]:''}">${i+1}</span></td>
+    <td>${s[0]}</td>
+    <td>${s[1]}</td>
+    <td>${D.filter(r=>get(r,'target_country')===s[0]&&get(r,'Sanctioned on','sanction_Date')).length}</td>
+    <td>${pct(s[1],D.length)}</td></tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTAKE
+// ─────────────────────────────────────────────────────────────────────────────
+function renderIntake() {
+  const D = FILTERED;
+  const byIntake = groupBy(D,'intake_formated');
+
+  const stats = Object.entries(byIntake).filter(([k])=>k&&k!=='Unknown').map(([intake,rows])=>({
+    intake,
+    leads: new Set(rows.map(r=>get(r,'user_id_uuid'))).size,
+    apps: rows.filter(r=>get(r,'App Created on','APP_creation_date')).length,
+    logins: rows.filter(r=>get(r,'Login on','application_id_received_at')).length,
+    sanctions: rows.filter(r=>get(r,'Sanctioned on','sanction_Date')).length,
+    disb: rows.filter(r=>get(r,'Disb_Date')).length,
+  })).sort((a,b)=>a.intake.localeCompare(b.intake));
+
+  // Intake scorecards
+  document.getElementById('intakeGrid').innerHTML = stats.map((s,i)=>`
+    <div class="intake-card">
+      <div class="intake-label" style="color:${PAL[i%PAL.length]}">${s.intake}</div>
+      <div class="intake-val">${s.leads}</div>
+      <div class="intake-sub">${s.apps} Apps · ${s.sanctions} Sanctioned</div>
+    </div>`).join('');
+
+  // Intake leads bar
+  mkChart('chartIntakeLeads','bar',{
+    labels: stats.map(s=>s.intake),
+    datasets:[{label:'Leads',data:stats.map(s=>s.leads),backgroundColor:stats.map((_,i)=>PAL[i%PAL.length]),borderRadius:4}]
+  },{plugins:{legend:{display:false}}});
+
+  // Intake funnel grouped
+  const vis = stats.slice(-8);
+  mkChart('chartIntakeFunnel','bar',{
+    labels: vis.map(s=>s.intake),
+    datasets:[
+      {label:'Leads',data:vis.map(s=>s.leads),backgroundColor:'rgba(0,201,167,.7)',borderRadius:3},
+      {label:'Apps',data:vis.map(s=>s.apps),backgroundColor:'rgba(0,133,255,.7)',borderRadius:3},
+      {label:'Logins',data:vis.map(s=>s.logins),backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},
+      {label:'Sanctions',data:vis.map(s=>s.sanctions),backgroundColor:'rgba(168,85,247,.7)',borderRadius:3},
+    ]
+  });
+
+  // Table
+  document.getElementById('intakeTableBody').innerHTML = stats.map(s=>`
+    <tr>
+      <td><span class="pill pill-blue">${s.intake}</span></td>
+      <td>${s.leads}</td><td>${s.apps}</td><td>${s.logins}</td><td>${s.sanctions}</td>
+      <td><span class="pill pill-green">${s.disb}</span></td>
+      <td>${pct(s.disb,s.leads)}</td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+loadData();
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
